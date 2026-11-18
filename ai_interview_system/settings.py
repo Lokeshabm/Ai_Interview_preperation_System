@@ -10,7 +10,6 @@ load_dotenv(BASE_DIR / '.env', override=True)
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-ai-interview-system-dev-key-2026')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-# Allow Vercel domain and local hosts
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
@@ -103,8 +102,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'interview' / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles_build' / 'static'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+WHITENOISE_USE_FINDERS = True
 
 MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
 MEDIA_ROOT = BASE_DIR / os.getenv('MEDIA_ROOT', 'media')
@@ -115,10 +115,8 @@ LOGOUT_REDIRECT_URL = '/login/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Upload limits
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
 
-# AI & Execution Configuration
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'gemini-1.5-flash')
 JUDGE0_API_KEY = os.getenv('JUDGE0_API_KEY', '')
