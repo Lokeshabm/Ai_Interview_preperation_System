@@ -1,0 +1,110 @@
+{% extends 'interview/base.html' %}
+
+{% block title %}Select Interview Type - AI Interview Prep{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="bg-primary bg-gradient text-white p-4">
+                    <h4 class="fw-bold mb-1"><i class="bi bi-sliders me-2"></i> Configure Your AI Interview</h4>
+                    <p class="mb-0 text-white-50">Select your target role, domain focus, question volume, and difficulty level.</p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <!-- Target Role -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Target Engineering Role</label>
+                            {{ form.target_role }}
+                            <small class="text-muted">The AI interviewer will frame technical cross-questions around this job profile.</small>
+                        </div>
+
+                        <!-- Resume Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Grounded Resume Source</label>
+                            {% if resumes %}
+                                <select name="resume_id" class="form-select">
+                                    {% for r in resumes %}
+                                        <option value="{{ r.id }}" {% if form.initial.resume_id|stringformat:"s" == r.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ r.file_name }} (Uploaded {{ r.uploaded_at|date:"M d, Y" }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Questions will be derived directly from the projects, skills, and tools in this resume.</small>
+                            {% else %}
+                                <div class="alert alert-warning d-flex align-items-center justify-content-between p-3">
+                                    <span><i class="bi bi-info-circle me-1"></i> No resume uploaded yet.</span>
+                                    <a href="{% url 'upload_resume' %}" class="btn btn-sm btn-warning fw-semibold">Upload Resume First</a>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Interview Type Cards -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Interview Focus Type</label>
+                            {{ form.interview_type }}
+                            <div class="row g-2 mt-2">
+                                <div class="col-md-4">
+                                    <div class="p-2 border rounded text-center small bg-light">
+                                        <strong>Technical / Coding:</strong> Deep dives into DSA, OOP, frameworks & live coding editor.
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-2 border rounded text-center small bg-light">
+                                        <strong>Project-Based:</strong> Architectural trade-offs, schemas, and challenges in your projects.
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-2 border rounded text-center small bg-light">
+                                        <strong>HR / Mixed:</strong> Realistic round combining behavioral, technical & coding assessments.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <!-- Difficulty -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Difficulty Level</label>
+                                {{ form.difficulty }}
+                            </div>
+
+                            <!-- Question Count -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Question Count</label>
+                                {{ form.total_questions }}
+                            </div>
+
+                            <!-- Duration -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Session Duration</label>
+                                {{ form.duration_minutes }}
+                            </div>
+                        </div>
+
+                        <!-- Media Checklist Notice -->
+                        <div class="p-3 bg-light rounded-3 border mb-4">
+                            <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-shield-check text-success me-1"></i> Pre-Interview Checklist</h6>
+                            <ul class="small text-secondary mb-0 ps-3">
+                                <li>Ensure your <strong>webcam</strong> and <strong>microphone</strong> are connected and accessible.</li>
+                                <li>The AI will speak questions aloud; you can answer verbally through the mic.</li>
+                                <li>Coding questions will <strong>automatically launch the Monaco code editor</strong> with execution test cases.</li>
+                                <li>No video is recorded or stored; media is strictly processed live in your browser.</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg fw-semibold shadow-sm">
+                                <i class="bi bi-play-circle-fill me-2"></i> Launch AI Interview Session
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

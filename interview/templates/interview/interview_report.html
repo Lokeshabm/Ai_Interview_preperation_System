@@ -1,0 +1,275 @@
+{% extends 'interview/base.html' %}
+
+{% block title %}Interview Performance Report - Session {{ session.id }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Banner -->
+    <div class="card shadow-sm border-0 rounded-4 bg-primary bg-gradient text-white p-4 mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <span class="badge bg-info text-dark px-3 py-1 rounded-pill mb-2 fw-semibold">
+                    <i class="bi bi-shield-check me-1"></i> Certified Performance Evaluation
+                </span>
+                <h2 class="fw-bold mb-1">Interview Performance Report</h2>
+                <p class="mb-0 text-white-50">
+                    Candidate: <strong>{{ session.user.get_full_name|default:session.user.username }}</strong> &bull;
+                    Role: <strong>{{ session.target_role }}</strong> &bull;
+                    Date: {{ session.created_at|date:"F d, Y" }}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'download_report_pdf' session.id %}" class="btn btn-light fw-bold text-danger shadow-sm">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download PDF Report
+                </a>
+                <a href="{% url 'select_interview' %}" class="btn btn-info fw-bold text-dark shadow-sm">
+                    <i class="bi bi-arrow-repeat me-1"></i> New Interview
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Readiness & Score Overview Row -->
+    <div class="row g-4 mb-4">
+        <!-- Big Overall Score & Verdict -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 p-4 text-center h-100 bg-white">
+                <span class="text-secondary small fw-semibold text-uppercase">Overall Performance</span>
+                <div class="display-3 fw-bold text-primary my-2">{{ session.overall_score|default:"0.0" }}</div>
+                <div class="text-muted small mb-3">out of 10.0 Possible Points</div>
+
+                <div class="p-3 rounded-3 {% if session.overall_score >= 7.0 %}bg-success-subtle text-success border border-success{% elif session.overall_score >= 5.0 %}bg-warning-subtle text-warning border border-warning{% else %}bg-danger-subtle text-danger border border-danger{% endif %} mb-3">
+                    <div class="fw-bold fs-6">{{ report.readiness_level }}</div>
+                    <small class="d-block mt-1">{{ report.summary_notes }}</small>
+                </div>
+
+                <div class="text-secondary small text-start">
+                    <div><i class="bi bi-person-fill text-muted me-2"></i> {{ session.user.get_full_name|default:session.user.username }}</div>
+                    <div><i class="bi bi-mortarboard-fill text-muted me-2"></i> {{ session.user.profile.college_name|default:"Engineering College" }}</div>
+                    <div><i class="bi bi-award-fill text-muted me-2"></i> {{ session.user.profile.degree|default:"B.Tech" }} ({{ session.user.profile.department|default:"CSE" }})</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5-Axis Competency Scores -->
+        <div class="col-lg-8">
+            <div class="row g-3">
+                <div class="col-sm-6 col-md-4">
+                    <div class="card shadow-sm border-0 rounded-3 p-3 bg-white h-100">
+                        <span class="text-muted small fw-semibold">Technical Foundation</span>
+                        <h3 class="fw-bold text-primary my-1">{{ session.technical_score|default:session.overall_score }} <small class="fs-6 text-muted">/10</small></h3>
+                        <small class="text-secondary">Core Concepts & Syntax</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="card shadow-sm border-0 rounded-3 p-3 bg-white h-100">
+                        <span class="text-muted small fw-semibold">Coding Assessment</span>
+                        <h3 class="fw-bold text-warning my-1">{{ session.coding_score|default:session.overall_score }} <small class="fs-6 text-muted">/10</small></h3>
+                        <small class="text-secondary">DSA, Logic & Edge Cases</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="card shadow-sm border-0 rounded-3 p-3 bg-white h-100">
+                        <span class="text-muted small fw-semibold">HR & Behavioral</span>
+                        <h3 class="fw-bold text-danger my-1">{{ session.hr_score|default:session.overall_score }} <small class="fs-6 text-muted">/10</small></h3>
+                        <small class="text-secondary">STAR Method & Professionalism</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6">
+                    <div class="card shadow-sm border-0 rounded-3 p-3 bg-white h-100">
+                        <span class="text-muted small fw-semibold">Project Depth & Architecture</span>
+                        <h3 class="fw-bold text-info my-1">{{ session.project_score|default:session.overall_score }} <small class="fs-6 text-muted">/10</small></h3>
+                        <small class="text-secondary">Design Trade-offs, Database, Schemas</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6">
+                    <div class="card shadow-sm border-0 rounded-3 p-3 bg-white h-100">
+                        <span class="text-muted small fw-semibold">Communication & Clarity</span>
+                        <h3 class="fw-bold text-success my-1">{{ session.communication_score|default:session.overall_score }} <small class="fs-6 text-muted">/10</small></h3>
+                        <small class="text-secondary">Articulation & Verbal Fluency</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observations Summary Card -->
+            <div class="card shadow-sm border-0 rounded-3 p-3 bg-white mt-3">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-success small mb-1"><i class="bi bi-hand-thumbs-up-fill me-1"></i> Key Strengths</h6>
+                        <p class="small text-secondary mb-0">{{ report.strengths_summary }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-danger small mb-1"><i class="bi bi-lightning-charge-fill me-1"></i> Areas for Improvement</h6>
+                        <p class="small text-secondary mb-0">{{ report.weaknesses_summary }}</p>
+                    </div>
+                </div>
+                {% if report.key_recommendations %}
+                <div class="mt-3 pt-2 border-top">
+                    <span class="small fw-semibold text-dark me-2">Recommended Learning Topics:</span>
+                    {% for rec in report.key_recommendations %}
+                        <span class="badge bg-primary-subtle text-primary border me-1">{{ rec }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js Visual Analytics Row -->
+    <div class="row g-4 mb-4">
+        <!-- Radar Chart: Competency Breakdown -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-pie-chart-fill text-primary me-2"></i> 5-Axis Competency Matrix</h5>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="competencyRadarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bar Chart: Question-by-Question Scores -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-bar-chart-fill text-success me-2"></i> Question-by-Question Score Distribution</h5>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="questionScoresBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Question-by-Question Breakdown -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4 bg-white">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check text-primary me-2"></i> Comprehensive Question-by-Question Analysis</h5>
+            <span class="badge bg-light text-dark border">{{ questions|length }} Questions Evaluated</span>
+        </div>
+        <div class="card-body p-4">
+            <div class="accordion" id="questionsAccordion">
+                {% for q in questions %}
+                <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
+                    <h2 class="accordion-header" id="heading{{ q.id }}">
+                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ q.id }}">
+                            <div class="d-flex align-items-center justify-content-between w-100 pe-3">
+                                <div>
+                                    <span class="badge bg-secondary me-2">Q{{ q.question_number }}</span>
+                                    <span class="badge bg-info-subtle text-dark border me-2">{{ q.get_category_display }}</span>
+                                    <span class="fw-semibold text-dark">{{ q.text|truncatechars:85 }}</span>
+                                </div>
+                                <div>
+                                    <span class="badge {% if q.answer.evaluation.score >= 7.0 %}bg-success{% elif q.answer.evaluation.score >= 5.0 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6">
+                                        {{ q.answer.evaluation.score|default:"0.0" }} / 10
+                                    </span>
+                                </div>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ q.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#questionsAccordion">
+                        <div class="accordion-body bg-light">
+                            <!-- Question Statement -->
+                            <div class="p-3 bg-white rounded-3 border mb-3">
+                                <label class="fw-bold text-secondary small d-block mb-1">INTERVIEW QUESTION:</label>
+                                <div class="text-dark fw-semibold">{{ q.text }}</div>
+                            </div>
+
+                            <!-- Candidate Answer / Code -->
+                            <div class="p-3 bg-white rounded-3 border mb-3">
+                                <label class="fw-bold text-secondary small d-block mb-1">YOUR ANSWER / CODE:</label>
+                                {% if q.is_coding %}
+                                    <pre class="bg-dark text-light p-3 rounded-2 mb-0" style="font-size: 13px;"><code>{{ q.answer.answer_text|default:"No code submitted." }}</code></pre>
+                                {% else %}
+                                    <div class="text-dark">{{ q.answer.answer_text|default:"No verbal answer recorded." }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- AI Evaluation & Model Answer -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-white rounded-3 border h-100">
+                                        <h6 class="fw-bold text-primary small mb-2"><i class="bi bi-robot me-1"></i> AI Evaluator Feedback:</h6>
+                                        <div class="small mb-2"><strong>Strengths:</strong> {{ q.answer.evaluation.strengths|default:"Answer demonstrated foundational intent." }}</div>
+                                        <div class="small text-danger mb-2"><strong>Areas to Improve:</strong> {{ q.answer.evaluation.weaknesses|default:"Expand on edge cases and scalability." }}</div>
+                                        <div class="small text-secondary"><strong>Actionable Tip:</strong> {{ q.answer.evaluation.improvements|default:"Structure answers using structured frameworks." }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-white rounded-3 border h-100">
+                                        <h6 class="fw-bold text-success small mb-2"><i class="bi bi-check-circle-fill me-1"></i> Ideal Model Answer / Approach:</h6>
+                                        <div class="small text-dark mb-0">{{ q.model_answer|default:q.answer.evaluation.model_answer|default:"A comprehensive solution explaining architecture, constraints, complexity, and trade-offs." }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Radar Chart
+    const radarCtx = document.getElementById('competencyRadarChart').getContext('2d');
+    new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+            labels: {{ radar_labels_json|safe }},
+            datasets: [{
+                label: 'Candidate Competency',
+                data: {{ radar_scores_json|safe }},
+                fill: true,
+                backgroundColor: 'rgba(2, 132, 199, 0.25)',
+                borderColor: '#0284c7',
+                pointBackgroundColor: '#0284c7',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#0284c7'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { color: '#e2e8f0' },
+                    grid: { color: '#f1f5f9' },
+                    suggestedMin: 0,
+                    suggestedMax: 10,
+                    ticks: { stepSize: 2 }
+                }
+            }
+        }
+    });
+
+    // Bar Chart
+    const barCtx = document.getElementById('questionScoresBarChart').getContext('2d');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ q_labels_json|safe }},
+            datasets: [{
+                label: 'Score (out of 10)',
+                data: {{ q_scores_json|safe }},
+                backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                borderColor: '#10b981',
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: 10,
+                    ticks: { stepSize: 2 }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

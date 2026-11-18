@@ -1,0 +1,134 @@
+{% extends 'interview/base.html' %}
+
+{% block title %}Question Bank & Practice - AI Interview Prep{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="card shadow-sm border-0 rounded-4 bg-primary text-white p-4 mb-4">
+        <h3 class="fw-bold mb-1"><i class="bi bi-book-half me-2"></i> Technical & Coding Question Bank</h3>
+        <p class="mb-0 text-white-50">Explore over 150+ categorized company interview questions, programming challenges, and HR behavioral prompts.</p>
+    </div>
+
+    <!-- Category Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2" id="questionTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-semibold" id="coding-tab" data-bs-toggle="pill" data-bs-target="#coding-pane">
+                <i class="bi bi-code-square me-1"></i> Coding Challenges
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="python-tab" data-bs-toggle="pill" data-bs-target="#python-pane">
+                <i class="bi bi-filetype-py me-1"></i> Python & OOP
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="django-tab" data-bs-toggle="pill" data-bs-target="#django-pane">
+                <i class="bi bi-diagram-3 me-1"></i> Django & Backend
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="java-tab" data-bs-toggle="pill" data-bs-target="#java-pane">
+                <i class="bi bi-cup-hot me-1"></i> Java & JVM
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="sql-tab" data-bs-toggle="pill" data-bs-target="#sql-pane">
+                <i class="bi bi-database me-1"></i> SQL & DBMS
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="hr-tab" data-bs-toggle="pill" data-bs-target="#hr-pane">
+                <i class="bi bi-people me-1"></i> HR & STAR Behavioral
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="questionTabContent">
+        <!-- Coding Challenges -->
+        <div class="tab-pane fade show active" id="coding-pane">
+            <div class="row g-3">
+                {% for c in coding_challenges %}
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 rounded-4 p-4 h-100 bg-white">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge bg-warning-subtle text-warning border px-3 py-1 rounded-pill">{{ c.difficulty|upper }}</span>
+                            <span class="badge bg-dark text-info">DSA / Coding</span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">{{ c.title }}</h5>
+                        <p class="text-secondary small mb-3">{{ c.problem }}</p>
+                        <div class="bg-light p-3 rounded-3 border">
+                            <label class="fw-bold text-secondary small d-block mb-1">SAMPLE TEST CASES:</label>
+                            {% for tc in c.test_cases %}
+                                <div class="small font-monospace mb-1">Input: <code>{{ tc.input }}</code> &rarr; Expected: <code>{{ tc.expected_output }}</code></div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Python -->
+        <div class="tab-pane fade" id="python-pane">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                <h5 class="fw-bold mb-3 text-dark">Python & Object-Oriented Programming (OOP)</h5>
+                <ol class="list-group list-group-numbered list-group-flush">
+                    {% for q in questions_bank.python %}
+                        <li class="list-group-item py-3 px-0 border-bottom">{{ q }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+
+        <!-- Django -->
+        <div class="tab-pane fade" id="django-pane">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                <h5 class="fw-bold mb-3 text-dark">Django Framework & System Architecture</h5>
+                <ol class="list-group list-group-numbered list-group-flush">
+                    {% for q in questions_bank.django %}
+                        <li class="list-group-item py-3 px-0 border-bottom">{{ q }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+
+        <!-- Java -->
+        <div class="tab-pane fade" id="java-pane">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                <h5 class="fw-bold mb-3 text-dark">Java, JVM & Multithreading</h5>
+                <ol class="list-group list-group-numbered list-group-flush">
+                    {% for q in questions_bank.java %}
+                        <li class="list-group-item py-3 px-0 border-bottom">{{ q }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+
+        <!-- SQL -->
+        <div class="tab-pane fade" id="sql-pane">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                <h5 class="fw-bold mb-3 text-dark">SQL, Database Design & Query Optimization</h5>
+                <ol class="list-group list-group-numbered list-group-flush">
+                    {% for q in questions_bank.sql %}
+                        <li class="list-group-item py-3 px-0 border-bottom">{{ q }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+
+        <!-- HR -->
+        <div class="tab-pane fade" id="hr-pane">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                <h5 class="fw-bold mb-3 text-dark">HR, Leadership & STAR Behavioral Questions</h5>
+                <ol class="list-group list-group-numbered list-group-flush">
+                    {% for q in questions_bank.hr %}
+                        <li class="list-group-item py-3 px-0 border-bottom">{{ q }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

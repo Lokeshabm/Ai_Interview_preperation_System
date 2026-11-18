@@ -1,0 +1,120 @@
+{% extends 'interview/base.html' %}
+
+{% block title %}Upload Resume - AI Interview Prep{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+                <div class="bg-primary text-white p-4">
+                    <h4 class="fw-bold mb-1"><i class="bi bi-file-earmark-person me-2"></i> Upload Your Resume</h4>
+                    <p class="mb-0 text-white-50">Upload your resume to extract 12 key engineering entities and generate tailored interview questions.</p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" enctype="multipart/form-data" id="resumeForm">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Target Engineering Role <span class="text-danger">*</span></label>
+                            {{ form.target_role }}
+                            <small class="text-muted">e.g. Full Stack Developer, Python Backend Engineer, Junior Data Analyst</small>
+                            {% if form.target_role.errors %}<div class="text-danger small mt-1">{{ form.target_role.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Drag and Drop Zone -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Resume File (PDF or DOCX) <span class="text-danger">*</span></label>
+                            <div class="dropzone" id="dropzoneArea">
+                                <i class="bi bi-cloud-arrow-up-fill text-primary display-4 mb-2"></i>
+                                <h5 class="fw-bold mb-1">Drag and drop your resume file here</h5>
+                                <p class="text-muted small mb-3">Supported formats: <strong>PDF (.pdf)</strong> or <strong>Word (.docx)</strong> (Max 5 MB)</p>
+                                <label for="id_resume_file" class="btn btn-outline-primary btn-sm px-4">Browse File</label>
+                                <div class="mt-2 text-dark fw-semibold small" id="selectedFileName"></div>
+                            </div>
+                            <div class="d-none">
+                                {{ form.resume_file }}
+                            </div>
+                            {% if form.resume_file.errors %}<div class="text-danger small mt-1">{{ form.resume_file.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg fw-semibold" id="submitBtn">
+                                <i class="bi bi-cpu-fill me-2"></i> Upload & Analyze with AI
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Previously Uploaded Resumes -->
+            {% if existing_resumes %}
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-archive-fill text-secondary me-2"></i> Previously Uploaded Resumes</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for r in existing_resumes %}
+                        <div class="list-group-item d-flex align-items-center justify-content-between p-3">
+                            <div>
+                                <div class="fw-semibold text-dark"><i class="bi bi-file-earmark-text text-primary me-2"></i> {{ r.file_name }}</div>
+                                <small class="text-muted">Uploaded on {{ r.uploaded_at|date:"M d, Y H:i" }} &bull; Format: {{ r.file_type|upper }}</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'resume_analysis' r.id %}" class="btn btn-sm btn-outline-info text-dark">
+                                    <i class="bi bi-search"></i> View Analysis
+                                </a>
+                                <a href="{% url 'select_interview' %}?resume_id={{ r.id }}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-play-circle"></i> Start Interview
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const fileInput = document.getElementById('id_resume_file');
+    const dropzone = document.getElementById('dropzoneArea');
+    const fileNameDisplay = document.getElementById('selectedFileName');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dragover');
+        });
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            fileNameDisplay.textContent = 'Selected: ' + files[0].name;
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            fileNameDisplay.textContent = 'Selected: ' + fileInput.files[0].name;
+        }
+    });
+</script>
+{% endblock %}
