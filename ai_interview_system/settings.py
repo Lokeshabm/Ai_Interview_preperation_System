@@ -88,6 +88,20 @@ else:
         }
     }
 
+# Session Management: Use cryptographically signed cookies
+# Prevents multi-instance serverless session loss between Vercel lambdas
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+SESSION_COOKIE_NAME = 'ai_interview_sessionid'
+SESSION_COOKIE_AGE = 1209600  # 14 days
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SAVE_EVERY_REQUEST = True
+
+if os.getenv('VERCEL'):
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE = 'Lax'
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',

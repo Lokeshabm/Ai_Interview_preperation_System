@@ -1,15 +1,17 @@
 import os
 from pathlib import Path
-from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ai_interview_system.settings')
 
-application = get_wsgi_application()
-app = application
+# Deterministic PBKDF2 hashes for 'admin123' and 'student123'
+# Ensures session auth hash (get_session_auth_hash) matches across all multi-container Vercel lambdas
+ADMIN_HASH = 'pbkdf2_sha256$1200000$aiinterviewadminsalt2026$OIIP7DRxm0TZBXkHdA/bBQlRjfHPceOPcmjctoPMX3s='
+STUDENT_HASH = 'pbkdf2_sha256$1200000$aiinterviewstudentsalt2026$zHVBIDnHiHhYs/XS56i7ouWdXpZDbZ8E3r4S/FA/Xhg='
 
-# Automatic migration & setup on Vercel Serverless startup
 if os.getenv('VERCEL'):
     try:
+        import django
+        django.setup()
         from django.core.management import call_command
         from django.db import connection
 
@@ -19,43 +21,65 @@ if os.getenv('VERCEL'):
             call_command('migrate', interactive=False)
 
         from django.contrib.auth.models import User
-        from interview.models import StudentProfile, Resume, ResumeAnalysis, InterviewSession, InterviewQuestion, InterviewAnswer, AnswerEvaluation, InterviewReport
+        from interview.models import StudentProfile, InterviewSession, InterviewQuestion, InterviewAnswer, AnswerEvaluation, InterviewReport
         from django.utils import timezone
 
-        # 1. Ensure Admin Superuser
-        if not User.objects.filter(username='admin').exists():
-            admin_user = User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-            admin_user.first_name = "System"
-            admin_user.last_name = "Administrator"
-            admin_user.save()
-
-            StudentProfile.objects.create(
-                user=admin_user,
-                phone_number="+91 9999999999",
-                college_name="Engineering Faculty",
-                degree="Admin",
-                department="Computer Science"
+        # 1. Ensure Admin Superuser with deterministic hash
+        admin_user = User.objects.filter(username='admin').first()
+        if not admin_user:
+            admin_user = User(
+                username='admin',
+                email='admin@example.com',
+                password=ADMIN_HASH,
+                first_name="System",
+                last_name="Administrator",
+                is_staff=True,
+                is_superuser=True,
+                is_active=True
             )
+            admin_user.save()
+            StudentProfile.objects.get_or_create(
+                user=admin_user,
+                defaults={
+                    'phone_number': "+91 9999999999",
+                    'college_name': "Engineering Faculty",
+                    'degree': "Admin",
+                    'department': "Computer Science"
+                }
+            )
+        else:
+            # Enforce identical hash and permissions across all lambdas
+            if admin_user.password != ADMIN_HASH or not admin_user.is_staff or not admin_user.is_superuser:
+                admin_user.password = ADMIN_HASH
+                admin_user.is_staff = True
+                admin_user.is_superuser = True
+                admin_user.is_active = True
+                admin_user.save()
 
-        # 2. Ensure Demo Student User
-        if not User.objects.filter(username='student').exists():
-            student_user = User.objects.create_user(
+        # 2. Ensure Demo Student User with deterministic hash
+        student_user = User.objects.filter(username='student').first()
+        if not student_user:
+            student_user = User(
                 username='student',
                 email='student@example.com',
-                password='student123',
+                password=STUDENT_HASH,
                 first_name="Rahul",
-                last_name="Sharma"
+                last_name="Sharma",
+                is_active=True
             )
-            StudentProfile.objects.create(
+            student_user.save()
+            StudentProfile.objects.get_or_create(
                 user=student_user,
-                phone_number="+91 9876543210",
-                college_name="National Institute of Technology",
-                degree="B.Tech",
-                department="Computer Science & Engineering",
-                bio="Passionate computer science student preparing for full-stack and backend software engineering campus placements."
+                defaults={
+                    'phone_number': "+91 9876543210",
+                    'college_name': "National Institute of Technology",
+                    'degree': "B.Tech",
+                    'department': "Computer Science & Engineering",
+                    'bio': "Passionate computer science student preparing for full-stack and backend software engineering campus placements."
+                }
             )
 
-            # Pre-seed sample completed interview for immediate dashboard analytics
+            # Pre-seed sample completed interview
             session = InterviewSession.objects.create(
                 user=student_user,
                 target_role="Full Stack Python Developer",
@@ -107,6 +131,14 @@ if os.getenv('VERCEL'):
                 weaknesses_summary="Consider edge-case analysis in complex production constraints.",
                 key_recommendations=["System Design", "Concurrency", "STAR Method"]
             )
+        else:
+            if student_user.password != STUDENT_HASH:
+                student_user.password = STUDENT_HASH
+                student_user.save()
 
     except Exception as exc:
         print("Vercel startup migration exception:", exc)
+
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
+app = application
